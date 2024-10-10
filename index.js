@@ -7,13 +7,22 @@ const cors = require('cors');
 const app = express();
 const port = 8000;
 
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: '*', // Allow all origins for now; replace with your frontend domain if needed
+  methods: 'GET,POST',
+  allowedHeaders: 'Content-Type',
+};
+
+// Enable CORS for all routes
+app.use(cors(corsOptions));
+
+// Parse JSON bodies
 app.use(bodyParser.json());
 
 app.post('/generate-pdf', async (req, res) => {
   try {
-    // const { htmlContent } = req.body;
-
+    // Use the HTML content or generate it
     const fontPath = path.resolve(__dirname, 'Playmaker D.ttf');
     const fontFile = fs.readFileSync(fontPath);
     const base64Font = fontFile.toString('base64');
@@ -29,24 +38,29 @@ app.post('/generate-pdf', async (req, res) => {
                                 @font-face {
                                       font-family: 'myFirstFont';
                                       src: url('${fontDataUrl}'); /* Base64-encoded font */
-                                    }
+                                }
 
-                                    * {
-                                      font-family: 'myFirstFont';
-                                    }
+                                * {
+                                  font-family: 'myFirstFont';
+                                }
                               </style>
                             </head>
                             <body>
                               <h1>font-familyasdas كيف حالك </h1>
                             </body>
-                          </html>
-`;
+                          </html>`;
 
     // Launch Puppeteer
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true, // Use headless mode
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for some cloud platforms
+    });
     const page = await browser.newPage();
 
-    // Use simple header and footer templates
+    // Set the HTML content to the page
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+    // Generate the header and footer templates
     const headerTemplate = `
     <div style="font-size:12px; text-align:center; width:100%; padding:10px;">
       Simple Header
@@ -57,31 +71,25 @@ app.post('/generate-pdf', async (req, res) => {
       Page <span class="pageNumber"></span> of <span class="totalPages"></span>
     </div>`;
 
-    // Set the content to the HTML received in the request
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
     // Create a temporary file to store the PDF
     const pdfPath = path.join(__dirname, 'output.pdf');
 
+    // Calculate header height dynamically
     const headerHeight = await page.evaluate((headerTemplate) => {
       const header = document.createElement('div');
-      header.innerHTML = ` <div height="200px" style="font-size:12px; text-align:center; width:100%; padding:10px; background-color:#f1f1f1;">
-      Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-    </div>`;
+      header.innerHTML = headerTemplate;
       document.body.appendChild(header);
       const height = header.offsetHeight;
       document.body.removeChild(header);
       return height;
     });
 
-    console.log(headerHeight, 'sdf');
-
-    // Generate PDF with header and footer
+    // Generate the PDF with header, footer, and margins
     await page.pdf({
       path: pdfPath,
       format: 'A4',
       margin: {
-        top: `${headerHeight + 10}px`, // Buffer for the header
+        top: `${headerHeight + 10}px`, // Add buffer for the header
         bottom: '30px', // Adjust bottom margin if needed
         left: '20px',
         right: '20px',
