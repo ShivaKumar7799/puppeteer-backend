@@ -1,11 +1,12 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const app = express();
 const port = 8000;
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 
 // CORS configuration
 const corsOptions = {
@@ -37,17 +38,23 @@ app.post('/generate-pdf', async (req, res) => {
                           </html>`;
 
     // Launch Puppeteer
+    // const browser = await puppeteer.launch({
+    //   executablePath: '/usr/bin/google-chrome-stable',
+    //   headless: true, // Use headless mode
+    //   args: [
+    //     '--no-sandbox',
+    //     '--disable-setuid-sandbox',
+    //     '-disable-dev-shm-usage',
+    //     '-disable-gpu',
+    //     '-single-process',
+    //   ],
+    //   headless: true,
+    // });
     const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/google-chrome-stable',
-      headless: true, // Use headless mode
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '-disable-dev-shm-usage',
-        '-disable-gpu',
-        '-single-process',
-      ],
-      headless: true,
+      executablePath: await chromium.executablePath,
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      headless: chromium.headless,
     });
     const page = await browser.newPage();
 
