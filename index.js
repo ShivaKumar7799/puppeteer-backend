@@ -22,12 +22,6 @@ app.use(bodyParser.json());
 
 app.post('/generate-pdf', async (req, res) => {
   try {
-    // Use the HTML content or generate it
-    const fontPath = path.resolve(__dirname, 'Playmaker D.ttf');
-    const fontFile = fs.readFileSync(fontPath);
-    const base64Font = fontFile.toString('base64');
-    const fontDataUrl = `data:font/ttf;base64,${base64Font}`;
-
     const htmlContent = `<!DOCTYPE html>
                           <html lang="en">
                             <head>
@@ -35,14 +29,6 @@ app.post('/generate-pdf', async (req, res) => {
                               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                               <title>Document</title>
                               <style>
-                                @font-face {
-                                      font-family: 'myFirstFont';
-                                      src: url('${fontDataUrl}'); /* Base64-encoded font */
-                                }
-
-                                * {
-                                  font-family: 'myFirstFont';
-                                }
                               </style>
                             </head>
                             <body>
