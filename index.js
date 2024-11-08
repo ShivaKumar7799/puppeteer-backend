@@ -9,32 +9,14 @@ const puppeteer = require('puppeteer-core');
 const app = express();
 const port = 8000;
 
-// CORS configuration
-const corsOptions = {
-  origin: '*', // Allow all origins for now; replace with your frontend domain if needed
-  methods: 'GET,POST',
-  allowedHeaders: 'Content-Type',
-};
-
-// Enable CORS for all routes
-app.use(cors(corsOptions));
-
-// Parse JSON bodies
+app.use(
+  cors({ origin: '*', methods: 'GET,POST', allowedHeaders: 'Content-Type' })
+);
 app.use(bodyParser.json());
 
 app.post('/generate-pdf', async (req, res) => {
   try {
-    const htmlContent = `<!DOCTYPE html>
-                          <html lang="en">
-                            <head>
-                              <meta charset="UTF-8" />
-                              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                              <title>Document</title>
-                            </head>
-                            <body>
-                              <h1>Sample PDF Content</h1>
-                            </body>
-                          </html>`;
+    const htmlContent = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Document</title></head><body><h1>Sample PDF Content</h1></body></html>`;
 
     const browser = await puppeteer.launch({
       executablePath: await chromium.executablePath,
@@ -47,11 +29,7 @@ app.post('/generate-pdf', async (req, res) => {
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
     const pdfPath = path.join(__dirname, 'output.pdf');
-    await page.pdf({
-      path: pdfPath,
-      format: 'A4',
-      printBackground: true,
-    });
+    await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
 
     await browser.close();
 
@@ -59,7 +37,6 @@ app.post('/generate-pdf', async (req, res) => {
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'attachment; filename=output.pdf',
     });
-
     const pdfStream = fs.createReadStream(pdfPath);
     pdfStream.pipe(res);
 
