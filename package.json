@@ -8,7 +8,7 @@
   "dependencies": {
     "chrome-aws-lambda": "^10.1.0",
     "cors": "^2.8.5",
-    "puppeteer-core": "^10.1.0"
+    "puppeteer-core": "^10.4.0"
   },
   "license": "ISC"
 }
