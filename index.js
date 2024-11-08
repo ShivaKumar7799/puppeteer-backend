@@ -38,8 +38,16 @@ app.post('/generate-pdf', async (req, res) => {
 
     // Launch Puppeteer
     const browser = await puppeteer.launch({
+      executablePath: '/usr/bin/google-chrome-stable',
       headless: true, // Use headless mode
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for some cloud platforms
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '-disable-dev-shm-usage',
+        '-disable-gpu',
+        '-single-process',
+      ],
+      headless: true,
     });
     const page = await browser.newPage();
 
